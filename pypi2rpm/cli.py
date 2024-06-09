@@ -21,6 +21,7 @@ with this program; if not, see
 
 import sys
 from argparse import ArgumentParser
+from logging import _nameToLevel  # noqa: PLC2701
 
 from pypi2rpm.logger import get_logger
 from pypi2rpm.version import version
@@ -34,7 +35,7 @@ def main() -> int:
     :return: int
     """
     parser = ArgumentParser()
-    parser.add_argument("-L", "--log-level", help="log level name")
+    parser.add_argument("-L", "--log-level", help="log level name", choices=list(_nameToLevel.keys()))
     parser.add_argument(
         "-V", "--version", help="show version string and exit", action="version", version=version
     )
