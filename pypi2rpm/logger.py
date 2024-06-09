@@ -21,6 +21,7 @@ with this program; if not, see
 
 import sys
 from logging import Logger
+from pprint import pformat
 
 from colorlog import ColoredFormatter, StreamHandler, getLogger
 
@@ -28,9 +29,9 @@ from colorlog import ColoredFormatter, StreamHandler, getLogger
 def get_logger(app_name: str, log_level: str) -> Logger:
     """Get the logger.
 
-    :param app_name: Application name.
-    :param log_level: Log level name.
-    :return: Logger
+    :param app_name: application name
+    :param log_level: log level name
+    :return: Logger.
     """
     fmt = "%(log_color)s%(levelname)-8s%(reset)s %(log_color)s%(name)-8s%(reset)s %(log_color)s%(message)s"
     formatter = ColoredFormatter(
@@ -49,7 +50,6 @@ def get_logger(app_name: str, log_level: str) -> Logger:
     )
     handler = StreamHandler()
     handler.setFormatter(formatter)
-
     logger = getLogger(app_name)
     logger.addHandler(handler)
     try:
@@ -59,3 +59,13 @@ def get_logger(app_name: str, log_level: str) -> Logger:
         sys.exit(1)
     logger.debug("Logger for '%s' started at the '%s' level", app_name, log_level)
     return logger
+
+
+def debug_pprint(logger: Logger, obj: object) -> None:
+    """Debug log the formatted representation of object.
+
+    :param logger: output logger
+    :param obj: object to print
+    :return: None.
+    """
+    logger.debug("%s\n%s", type(obj), pformat(obj))

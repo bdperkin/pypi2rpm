@@ -23,7 +23,8 @@ import sys
 from argparse import ArgumentParser
 from logging import _nameToLevel  # noqa: PLC2701
 
-from pypi2rpm.logger import get_logger
+from pypi2rpm.logger import debug_pprint, get_logger
+from pypi2rpm.util import run_cmd
 from pypi2rpm.version import version
 
 app_name = "pypi2rpm"
@@ -32,7 +33,7 @@ app_name = "pypi2rpm"
 def main() -> int:
     """Top-level code.
 
-    :return: int
+    :return: int.
     """
     parser = ArgumentParser()
     parser.add_argument("-L", "--log-level", help="log level name", choices=list(_nameToLevel.keys()))
@@ -49,7 +50,14 @@ def main() -> int:
         log_level = args.log_level
     logger = get_logger(app_name, log_level)
     logger.debug("'%s' starting", __name__)
-    logger.info("Processing '%s'", args.requirement_specifier)
+    logger.info("Processing package '%s'", args.requirement_specifier)
+    cmd = "pip freeze"
+    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
+    debug_pprint(logger, stdout)
+    if stderr:
+        logger.error(stderr)
+    if exit_code:
+        return exit_code
     return 0
 
 
