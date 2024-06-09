@@ -30,6 +30,7 @@ classifiers = [
     "Topic :: System :: Archiving :: Packaging",
 ]
 dependencies = [
+    "colorlog",
 ]
 dynamic = ["version"]
 
@@ -42,6 +43,82 @@ pypi2rpm = "pypi2rpm.cli:main"
 documentation = "https://github.com/bdperkin/pypi2rpm"
 homepage = "https://github.com/bdperkin/pypi2rpm"
 repository = "https://github.com/bdperkin/pypi2rpm"
+
+[tool.autopep8]
+max_line_length = 110
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+extend-select = [
+    "A",
+    "AIR",
+    "ANN",
+    "ARG",
+    "ASYNC",
+    "B",
+    "BLE",
+    "C4",
+    "C90",
+    "COM",
+    "CPY",
+    "D",
+    "DJ",
+    "DTZ",
+    "E",
+    "EM",
+    "ERA",
+    "EXE",
+    "F",
+    "FA",
+    "FBT",
+    "FIX",
+    "FLY",
+    "FURB",
+    "G",
+    "I",
+    "ICN",
+    "INP",
+    "INT",
+    "ISC",
+    "LOG",
+    "N",
+    "NPY",
+    "PD",
+    "PERF",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "S",
+    "SIM",
+    "SLF",
+    "SLOT",
+    "T10",
+    "T20",
+    "TCH",
+    "TD",
+    "TID",
+    "TRIO",
+    "TRY",
+    "UP",
+    "W",
+    "YTT",
+]
+ignore = [
+    "COM812",
+    "D203",
+    "D213",
+    "ISC001",
+]
+preview = true
 
 [tool.setuptools.dynamic.version]
 attr = "pypi2rpm.version.version"
