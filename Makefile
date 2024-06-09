@@ -19,8 +19,8 @@ clean-all: clean ## Clean environment including the virtual env and cache
 venv: clean ## Create isolated Python environment
 	@echo "Creating isolated $(PYTHON_BIN) environment"
 	$(eval PYTHON_MINOR_VERSION := $(shell $(PYTHON_BIN) --version | cut -d . -f 2))
-	if [ $(PYTHON_MINOR_VERSION) -lt 8 ]; then \
-		echo "Minimum Python version to use pypi2rpm is 3.8" && exit 1; \
+	if [ $(PYTHON_MINOR_VERSION) -lt 9 ]; then \
+		echo "Minimum Python version to use pypi2rpm is 3.9" && exit 1; \
 	fi
 	$(PYTHON_BIN) -m venv venv;
 	venv/bin/pip install -U pip

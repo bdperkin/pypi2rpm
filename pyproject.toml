@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Tool to create RPM Package Manager (RPM) package from a Python Package Index (PyPI) package."
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["PyPI", "RPM"]
 license = {text = "GNU General Public License v3 or later (GPLv3+)"}
 classifiers = [
@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
