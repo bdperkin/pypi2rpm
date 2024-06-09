@@ -20,7 +20,7 @@ venv: clean ## Create isolated Python environment
 	@echo "Creating isolated $(PYTHON_BIN) environment"
 	$(eval PYTHON_MINOR_VERSION := $(shell $(PYTHON_BIN) --version | cut -d . -f 2))
 	if [ $(PYTHON_MINOR_VERSION) -lt 8 ]; then \
-		echo "Minimum Python version to use Vapor is 3.8" && exit 1; \
+		echo "Minimum Python version to use pypi2rpm is 3.8" && exit 1; \
 	fi
 	$(PYTHON_BIN) -m venv venv;
 	venv/bin/pip install -U pip

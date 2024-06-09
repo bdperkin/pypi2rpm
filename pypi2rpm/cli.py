@@ -1,8 +1,8 @@
 import sys
 
 
-def main() -> None:
-    return None
+def main() -> int:
+    return 0
 
 
 if __name__ == "__main__":
