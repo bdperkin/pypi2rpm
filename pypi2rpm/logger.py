@@ -31,7 +31,7 @@ def get_logger(app_name: str, log_level: str) -> Logger:
 
     :param app_name: application name
     :param log_level: log level name
-    :return: Logger
+    :return: Logger.
     """
     fmt = "%(log_color)s%(levelname)-8s%(reset)s %(log_color)s%(name)-8s%(reset)s %(log_color)s%(message)s"
     formatter = ColoredFormatter(
@@ -50,7 +50,6 @@ def get_logger(app_name: str, log_level: str) -> Logger:
     )
     handler = StreamHandler()
     handler.setFormatter(formatter)
-
     logger = getLogger(app_name)
     logger.addHandler(handler)
     try:
@@ -67,6 +66,6 @@ def debug_pprint(logger: Logger, obj: object) -> None:
 
     :param logger: output logger
     :param obj: object to print
-    :return: None
+    :return: None.
     """
     logger.debug("%s\n%s", type(obj), pformat(obj))

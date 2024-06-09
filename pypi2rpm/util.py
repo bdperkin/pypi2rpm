@@ -37,7 +37,7 @@ def run_cmd(logger: Logger, command: str, env_variables: dict[str, str] | None) 
     :param logger: output logger
     :param command: command to run
     :param env_variables: environmental variables
-    :return: tuple[int, str, str]
+    :return: tuple[int, str, str].
     """
     environ["PYTHONUNBUFFERED"] = "1"
     if env_variables is None:

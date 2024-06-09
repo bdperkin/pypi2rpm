@@ -33,7 +33,7 @@ app_name = "pypi2rpm"
 def main() -> int:
     """Top-level code.
 
-    :return: int
+    :return: int.
     """
     parser = ArgumentParser()
     parser.add_argument("-L", "--log-level", help="log level name", choices=list(_nameToLevel.keys()))
@@ -50,13 +50,14 @@ def main() -> int:
         log_level = args.log_level
     logger = get_logger(app_name, log_level)
     logger.debug("'%s' starting", __name__)
-    logger.info("Processing '%s'", args.requirement_specifier)
+    logger.info("Processing package '%s'", args.requirement_specifier)
     cmd = "pip freeze"
-    logger.info("Running '%s'", cmd)
     exit_code, stdout, stderr = run_cmd(logger, cmd, None)
-    debug_pprint(logger, exit_code)
     debug_pprint(logger, stdout)
-    debug_pprint(logger, stderr)
+    if stderr:
+        logger.error(stderr)
+    if exit_code:
+        return exit_code
     return 0
 
 
