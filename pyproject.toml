@@ -24,5 +24,10 @@ dynamic = ["version"]
 [project.scripts]
 pypi2rpm = "pypi2rpm.cli:main"
 
-# ... other project metadata fields as listed in:
-#     https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+[tool.setuptools.dynamic.version]
+attr = "pypi2rpm.version.version"
+
+[tool.setuptools.packages.find]
+
+[tool.setuptools_scm]
+write_to = "pypi2rpm/version.py"
