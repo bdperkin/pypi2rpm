@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pypi2rpm"
+authors = [
+    {name = "Brandon Perkins", email = "bperkins@redhat.com"},
+]
+description = "Tool to create RPM Package Manager (RPM) package from a Python Package Index (PyPI) package."
+readme = "README.rst"
+requires-python = ">=3.8"
+keywords = ["PyPI", "RPM"]
+license = {text = "GNU General Public License v3.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+
+[project.scripts]
+pypi2rpm = "pypi2rpm.cli:main"
+
+[tool.setuptools.dynamic.version]
+attr = "pypi2rpm.version.version"
+
+[tool.setuptools.packages.find]
+
+[tool.setuptools_scm]
+write_to = "pypi2rpm/version.py"
