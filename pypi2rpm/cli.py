@@ -1,14 +1,19 @@
 import sys
-import argparse
+from argparse import ArgumentParser
+from pypi2rpm.logger import get_logger
+
+app_name = "pypi2rpm"
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
+    logger = get_logger(app_name)
+    parser = ArgumentParser()
     parser.add_argument(
         "requirement_specifier", help="PyPI (and other indexes) requirement specifier."
     )
     args = parser.parse_args()
-    print(args.requirement_specifier)
+    logger.debug("'%s' starting", __name__)
+    logger.info("Processing '%s'", args.requirement_specifier)
     return 0
 
 

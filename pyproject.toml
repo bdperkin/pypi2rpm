@@ -30,6 +30,7 @@ classifiers = [
     "Topic :: System :: Archiving :: Packaging",
 ]
 dependencies = [
+    "colorlog",
 ]
 dynamic = ["version"]
 
