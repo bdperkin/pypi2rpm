@@ -4,7 +4,11 @@ import argparse
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.parse_args()
+    parser.add_argument(
+        "requirement_specifier", help="PyPI (and other indexes) requirement specifier."
+    )
+    args = parser.parse_args()
+    print(args.requirement_specifier)
     return 0
 
 
