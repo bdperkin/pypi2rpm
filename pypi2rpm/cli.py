@@ -23,6 +23,7 @@ import sys
 from argparse import ArgumentParser
 
 from pypi2rpm.logger import get_logger
+from pypi2rpm.version import version
 
 app_name = "pypi2rpm"
 
@@ -33,10 +34,13 @@ def main() -> int:
     :return: int
     """
     parser = ArgumentParser()
-    parser.add_argument("-L", "--log-level", help="Log level name.")
+    parser.add_argument("-L", "--log-level", help="log level name")
+    parser.add_argument(
+        "-V", "--version", help="show version string and exit", action="version", version=version
+    )
     parser.add_argument(
         "requirement_specifier",
-        help="PyPI (and other indexes) requirement specifier.",
+        help="PyPI (and other indexes) requirement specifier",
     )
     args = parser.parse_args()
     log_level = "WARNING"
