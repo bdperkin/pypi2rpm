@@ -1,0 +1,15 @@
+---
+
+extends: default
+
+ignore: |
+  .pre-commit-config.yaml
+
+rules:
+  comments:
+    require-starting-space: false
+  truthy: disable
+  line-length:
+    max: 110
+    level: warning
+    allow-non-breakable-inline-mappings: true

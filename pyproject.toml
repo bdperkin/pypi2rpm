@@ -11,9 +11,23 @@ description = "Tool to create RPM Package Manager (RPM) package from a Python Pa
 readme = "README.rst"
 requires-python = ">=3.8"
 keywords = ["PyPI", "RPM"]
-license = {text = "GNU General Public License v3.0"}
+license = {text = "GNU General Public License v3 or later (GPLv3+)"}
 classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Archiving :: Packaging",
 ]
 dependencies = [
 ]
@@ -23,6 +37,11 @@ dynamic = ["version"]
 
 [project.scripts]
 pypi2rpm = "pypi2rpm.cli:main"
+
+[project.urls]
+documentation = "https://github.com/bdperkin/pypi2rpm"
+homepage = "https://github.com/bdperkin/pypi2rpm"
+repository = "https://github.com/bdperkin/pypi2rpm"
 
 [tool.setuptools.dynamic.version]
 attr = "pypi2rpm.version.version"

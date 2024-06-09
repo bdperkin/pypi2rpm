@@ -1,0 +1,367 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+    python: python3.8
+default_stages:
+  - pre-commit
+  - pre-push
+fail_fast: true
+repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+      - id: identity
+        stages:
+          - manual
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+        name: check for added large files
+        description: prevents giant files from being committed.
+        entry: check-added-large-files
+        language: python
+        stages: [commit, push, manual]
+      - id: check-ast
+        name: check python ast
+        description: simply checks whether the files parse as valid python.
+        entry: check-ast
+        language: python
+        types: [python]
+      - id: check-builtin-literals
+        name: check builtin type constructor use
+        description: requires literal syntax when initializing empty or zero python
+          builtin types.
+        entry: check-builtin-literals
+        language: python
+        types: [python]
+      - id: check-docstring-first
+        name: check docstring is first
+        description: checks a common error of defining a docstring after code.
+        entry: check-docstring-first
+        language: python
+        types: [python]
+      - id: check-shebang-scripts-are-executable
+        name: check that scripts with shebangs are executable
+        description: ensures that (non-binary) files with a shebang are executable.
+        entry: check-shebang-scripts-are-executable
+        language: python
+        types: [text]
+        stages: [commit, push, manual]
+        exclude_types:
+          - jinja
+      - id: check-merge-conflict
+        name: check for merge conflicts
+        description: checks for files that contain merge conflict strings.
+        entry: check-merge-conflict
+        language: python
+        types: [text]
+      - id: check-toml
+        name: check toml
+        description: checks toml files for parseable syntax.
+        entry: check-toml
+        language: python
+        types: [toml]
+      - id: check-vcs-permalinks
+        name: check vcs permalinks
+        description: ensures that links to vcs websites are permalinks.
+        entry: check-vcs-permalinks
+        language: python
+        types: [text]
+      - id: check-yaml
+        name: check yaml
+        description: checks yaml files for parseable syntax.
+        entry: check-yaml
+        language: python
+        types: [yaml]
+      - id: debug-statements
+        name: debug statements (python)
+        description: checks for debugger imports and py37+ `breakpoint()` calls in
+          python source.
+        entry: debug-statement-hook
+        language: python
+        types: [python]
+      - id: destroyed-symlinks
+        name: detect destroyed symlinks
+        description: detects symlinks which are changed to regular files with a content
+          of a path which that symlink was pointing to.
+        entry: destroyed-symlinks
+        language: python
+        types: [file]
+      - id: detect-private-key
+        name: detect private key
+        description: detects the presence of private keys.
+        entry: detect-private-key
+        language: python
+        types: [text]
+      - id: end-of-file-fixer
+        name: fix end of files
+        description: ensures that a file is either empty, or ends with one newline.
+        entry: end-of-file-fixer
+        language: python
+        types: [text]
+        stages: [commit, push, manual]
+        exclude_types:
+          - jinja
+          - markdown
+          - rst
+          - svg
+      - id: fix-byte-order-marker
+        name: fix utf-8 byte order marker
+        description: removes utf-8 byte order marker.
+        entry: fix-byte-order-marker
+        language: python
+        types: [text]
+      - id: mixed-line-ending
+        name: mixed line ending
+        description: replaces or checks mixed line ending.
+        entry: mixed-line-ending
+        language: python
+        types: [text]
+      - id: no-commit-to-branch
+        name: don't commit to branch
+        entry: no-commit-to-branch
+        language: python
+        pass_filenames: false
+        always_run: true
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+        description: trims trailing whitespace.
+        entry: trailing-whitespace-fixer
+        language: python
+        types: [text]
+        stages: [commit, push, manual]
+        exclude_types:
+          - svg
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-check-blanket-noqa
+        name: check blanket noqa
+        description: 'Enforce that `noqa` annotations always occur with specific codes.
+          Sample annotations: `# noqa: F401`, `# noqa: F401,W203`'
+        entry: '(?i)# noqa(?!: )'
+        language: pygrep
+        types: [python]
+      - id: python-check-blanket-type-ignore
+        name: check blanket type ignore
+        description: 'Enforce that `# type: ignore` annotations always occur with
+          specific codes. Sample annotations: `# type: ignore[attr-defined]`, `# type:
+          ignore[attr-defined, name-defined]`'
+        entry: '# type:? *ignore(?!\[|\w)'
+        language: pygrep
+        types: [python]
+      - id: python-check-mock-methods
+        name: check for not-real mock methods
+        description: >-
+          Prevent common mistakes of `assert mck.not_called()`, `assert mck.called_once_with(...)`
+          and `mck.assert_called`.
+        language: pygrep
+        entry: >
+          (?x)(
+              assert .*\.(
+                  not_called|
+                  called_
+              )|
+              # ''.join(rf'(?<!\b{s})' for s in dir(mock) if s.endswith('Mock')))
+              (?<!\bAsyncMock)(?<!\bMagicMock)(?<!\bMock)(?<!\bNonCallableMagicMock)(?<!\bNonCallableMock)(?<!\bPropertyMock)
+              \.assert_(
+                  any_call|
+                  called|
+                  called_once|
+                  called_once_with|
+                  called_with|
+                  has_calls|
+                  not_called
+              )($|[^(\w])
+          )
+        types: [python]
+      - id: python-no-eval
+        name: check for eval()
+        description: A quick check for the `eval()` built-in function
+        entry: \beval\(
+        language: pygrep
+        types: [python]
+      - id: python-no-log-warn
+        name: use logger.warning(
+        description: A quick check for the deprecated `.warn()` method of python loggers
+        entry: (?<!warnings)\.warn\(
+        language: pygrep
+        types: [python]
+      - id: python-use-type-annotations
+        name: type annotations not comments
+        description: Enforce that python3.6+ type annotations are used instead of
+          type comments
+        entry: '# type(?!: *ignore([^a-zA-Z0-9]|$))'
+        language: pygrep
+        types: [python]
+      - id: rst-backticks
+        name: rst ``code`` is two backticks
+        description: Detect common mistake of using single backticks when writing
+          rst
+        entry: ^(?!    ).*(^| )`[^`]+`([^_]|$)
+        language: pygrep
+        types: [rst]
+      - id: rst-directive-colons
+        name: rst directives end with two colons
+        description: Detect mistake of rst directive not ending with double colon
+          or space before the double colon
+        entry: ^\s*\.\. [a-z]+(| | :):$
+        language: pygrep
+        types: [rst]
+      - id: rst-inline-touching-normal
+        name: rst ``inline code`` next to normal text
+        description: Detect mistake of inline code touching normal text in rst
+        entry: \w``\w
+        language: pygrep
+        types: [rst]
+      - id: text-unicode-replacement-char
+        name: no unicode replacement chars
+        description: Forbid files which have a UTF-8 Unicode replacement character
+        entry: �
+        language: pygrep
+        types: [text]
+        exclude: ^\.pre-commit-config.yaml$
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.18
+    hooks:
+      - id: validate-pyproject
+        name: Validate pyproject.toml
+        description: >
+          Validation library for a simple check on pyproject.toml,
+          including optional dependencies
+        language: python
+        files: ^pyproject.toml$
+        entry: validate-pyproject
+        additional_dependencies:
+          - .[all]
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        name: yamllint
+        description: This hook runs yamllint.
+        entry: yamllint
+        language: python
+        types: [file, yaml]
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.4
+    hooks:
+      - id: autopep8
+        name: autopep8
+        description: ''
+        entry: autopep8
+        language: python
+        types: [python]
+        args: [-i]
+        require_serial: false
+        additional_dependencies: []
+        minimum_pre_commit_version: '0'
+  - repo: https://github.com/PyCQA/doc8
+    rev: v1.1.1
+    hooks:
+      - id: doc8
+        name: doc8
+        description: This hook runs doc8 for linting docs
+        entry: python -m doc8
+        language: python
+        files: \.rst$
+        require_serial: true
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.5
+    hooks:
+      - id: docformatter
+        name: docformatter
+        description: Formats docstrings to follow PEP 257.
+        entry: docformatter
+        args: [-i]
+        language: python
+        types: [python]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.8
+    hooks:
+      - id: ruff
+        name: ruff
+        description: Run 'ruff' for extremely fast Python linting
+        entry: ruff check --force-exclude
+        language: python
+        types_or: [python, pyi]
+        args: []
+        require_serial: true
+        additional_dependencies: []
+        minimum_pre_commit_version: 2.9.2
+      - id: ruff-format
+        name: ruff-format
+        description: Run 'ruff format' for extremely fast Python formatting
+        entry: ruff format --force-exclude
+        language: python
+        types_or: [python, pyi]
+        args: []
+        require_serial: true
+        additional_dependencies: []
+        minimum_pre_commit_version: 2.9.2
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        name: mypy
+        description: ''
+        entry: mypy
+        language: python
+        types_or: [python, pyi]
+        args: [--ignore-missing-imports, --scripts-are-modules]
+        require_serial: true
+        additional_dependencies: []
+        minimum_pre_commit_version: 2.9.2
+  - repo: https://github.com/regebro/pyroma
+    rev: '4.2'
+    hooks:
+      - id: pyroma
+        name: Check package with Pyroma
+        description: Check how well a Python package conforms to best practices.
+        entry: pyroma
+        args: [-d, --min=10, .]
+        language: python
+        pass_filenames: false
+        always_run: true
+  - repo: https://github.com/PrincetonUniversity/blocklint
+    rev: v0.2.5
+    hooks:
+      - id: blocklint
+        name: blocklint
+        description: '`blocklint` is a command-line utility for inclusive language
+          highlighting.'
+        entry: blocklint
+        language: python
+        types: [text]
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.1
+    hooks:
+      - id: gitlint
+        name: gitlint
+        description: Checks your git commit messages for style.
+        language: python
+        additional_dependencies: ['./gitlint-core[trusted-deps]']
+        entry: gitlint
+        args: [--staged, --msg-filename]
+        stages: [commit-msg]
+      - id: gitlint-ci
+        name: gitlint
+        language: python
+        additional_dependencies: ['./gitlint-core[trusted-deps]']
+        entry: gitlint
+        always_run: true
+        pass_filenames: false
+        stages: [manual]
+  - repo: https://github.com/pre-commit/sync-pre-commit-deps
+    rev: v0.0.1
+    hooks:
+      - id: sync-pre-commit-deps
+        name: sync-pre-commit-deps
+        description: Sync pre-commit hook dependencies based on other installed hooks
+        entry: sync-pre-commit-deps
+        language: python
+        language_version: python3
+        files: ^\.pre-commit-config.yaml$
