@@ -23,7 +23,8 @@ import sys
 from argparse import ArgumentParser
 from logging import _nameToLevel  # noqa: PLC2701
 
-from pypi2rpm.logger import get_logger
+from pypi2rpm.logger import debug_pprint, get_logger
+from pypi2rpm.util import run_cmd
 from pypi2rpm.version import version
 
 app_name = "pypi2rpm"
@@ -50,6 +51,12 @@ def main() -> int:
     logger = get_logger(app_name, log_level)
     logger.debug("'%s' starting", __name__)
     logger.info("Processing '%s'", args.requirement_specifier)
+    cmd = "pip freeze"
+    logger.info("Running '%s'", cmd)
+    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
+    debug_pprint(logger, exit_code)
+    debug_pprint(logger, stdout)
+    debug_pprint(logger, stderr)
     return 0
 
 

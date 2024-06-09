@@ -21,7 +21,7 @@ with this program; if not, see
 
 from __future__ import annotations
 
-from os import _Environ, environ, set_blocking
+from os import environ, set_blocking
 from pathlib import Path
 from select import EPOLLHUP, EPOLLIN, epoll
 from subprocess import PIPE, Popen  # noqa: S404
@@ -31,17 +31,18 @@ if TYPE_CHECKING:
     from logging import Logger
 
 
-def run_cmd(command: str, env_variables: _Environ[str], logger: Logger) -> tuple[int, str, str]:
+def run_cmd(logger: Logger, command: str, env_variables: dict[str, str] | None) -> tuple[int, str, str]:
     """Run command in a subprocess.
 
+    :param logger: output logger
     :param command: command to run
     :param env_variables: environmental variables
-    :param logger: output logger
     :return: tuple[int, str, str]
     """
     environ["PYTHONUNBUFFERED"] = "1"
     if env_variables is None:
         env_variables = {**environ}
+    logger.info("Running command '%s'", command)
     with Popen(
         command,
         env={
@@ -80,7 +81,7 @@ def run_cmd(command: str, env_variables: _Environ[str], logger: Logger) -> tuple
                         lines = s_proc.stderr.readlines()  # type: ignore[union-attr]
                         stderr.extend(lines)
                     if lines:
-                        logger.debug("%s", "".join(lines).rstrip())
+                        logger.debug("Command '%s' output:\n%s", command, "".join(lines).rstrip())
                 # on hang up unregister
                 if ev & EPOLLHUP:
                     poller.unregister(fd)
