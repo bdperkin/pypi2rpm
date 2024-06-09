@@ -31,10 +31,15 @@ classifiers = [
 ]
 dependencies = [
     "colorlog",
+    "requests",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
+mypy = [
+    "mypy",
+    "types-requests",
+]
 
 [project.scripts]
 pypi2rpm = "pypi2rpm.cli:main"

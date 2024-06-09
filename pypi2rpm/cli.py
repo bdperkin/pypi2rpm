@@ -24,6 +24,7 @@ from argparse import ArgumentParser
 from logging import _nameToLevel  # noqa: PLC2701
 
 from pypi2rpm.logger import debug_pprint, get_logger
+from pypi2rpm.pypi import get_pypi_json
 from pypi2rpm.util import run_cmd
 from pypi2rpm.version import version
 
@@ -45,12 +46,13 @@ def main() -> int:
         help="PyPI (and other indexes) requirement specifier",
     )
     args = parser.parse_args()
+    package_name = args.requirement_specifier
     log_level = "WARNING"
     if args.log_level:
         log_level = args.log_level
     logger = get_logger(app_name, log_level)
     logger.debug("'%s' starting", __name__)
-    logger.info("Processing package '%s'", args.requirement_specifier)
+    logger.info("Processing package '%s'", package_name)
     cmd = "pip freeze"
     exit_code, stdout, stderr = run_cmd(logger, cmd, None)
     debug_pprint(logger, stdout)
@@ -58,6 +60,7 @@ def main() -> int:
         logger.error(stderr)
     if exit_code:
         return exit_code
+    debug_pprint(logger, get_pypi_json(package_name))
     return 0
 
 
