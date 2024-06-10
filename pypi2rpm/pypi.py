@@ -22,6 +22,7 @@ with this program; if not, see
 from __future__ import annotations
 
 import sys
+from hashlib import md5
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -69,17 +70,28 @@ def write_spec(spec_file_name: str, pypi_info: dict, pypi_urls: dict) -> tuple[P
     environment = Environment(autoescape=False, loader=FileSystemLoader("pypi2rpm/templates/"))  # noqa: S701
     template = environment.get_template("python-package.spec.j2")
     source_url = None
+    source_md5 = None
     for pypi_url in pypi_urls:
         if pypi_url["packagetype"] == "sdist" and pypi_url["python_version"] == "source":
             source_url = pypi_url["url"]
-    if not source_url:
-        sys.exit(f"Cannot find a source URL for '{pypi_info['name']}'")
+            source_md5 = pypi_url["md5_digest"]
+    if not source_url or not source_md5:
+        sys.exit(f"Cannot find a source URL or MD5SUM for '{pypi_info['name']}'")
     source_file = Path(source_url.split("/")[-1])
-    source_data = get(source_url, stream=True, timeout=10)
-    with source_file.open("wb") as data:
-        for chunk in source_data.iter_content(chunk_size=1024):
-            if chunk:
-                data.write(chunk)
+    if source_file.exists():
+        md5sum = md5(source_file.open("rb").read()).hexdigest()  # noqa: S324
+        if md5sum != source_md5:
+            source_file.unlink()
+    if not source_file.exists():
+        source_data = get(source_url, stream=True, timeout=10)
+        with source_file.open("wb") as data:
+            for chunk in source_data.iter_content(chunk_size=1024):
+                if chunk:
+                    data.write(chunk)
+        md5sum = md5(source_file.open("rb").read()).hexdigest()  # noqa: S324
+        if md5sum != source_md5:
+            source_file.unlink()
+            sys.exit(f"MD5SUM of file '{source_file}' does not match '{source_md5}'")
     content = template.render(
         lc_name=pypi_info["name"].lower(),
         version=pypi_info["version"],
