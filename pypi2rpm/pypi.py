@@ -22,13 +22,18 @@ with this program; if not, see
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timezone
 from hashlib import md5
 from typing import TYPE_CHECKING
 
 from jinja2 import Environment, FileSystemLoader
 from requests import get
 
+from pypi2rpm.logger import debug_pprint
+from pypi2rpm.util import run_cmd
+
 if TYPE_CHECKING:
+    from logging import Logger
     from pathlib import Path
 
 
@@ -62,17 +67,14 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     return pypi_info, pypi_urls
 
 
-def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[Path, Path]:
-    """Write the RPM SPEC file.
+def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str, Path]:
+    """Get the source archive and file.
 
-    :param spec_file: spec file path
     :param sources_dir: sources rpmbuild directory
     :param pypi_info: PyPI information data
     :param pypi_urls: PyPI url data
-    :return: tuple[Path, Path].
+    :return: tuple[str, Path].
     """
-    environment = Environment(autoescape=False, loader=FileSystemLoader("pypi2rpm/templates/"))  # noqa: S701
-    template = environment.get_template("python-package.spec.j2")
     source_url = None
     source_md5 = None
     for pypi_url in pypi_urls:
@@ -96,6 +98,32 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
         if md5sum != source_md5:
             source_file.unlink()
             sys.exit(f"MD5SUM of file '{source_file}' does not match '{source_md5}'")
+    return source_url, source_file
+
+
+def write_spec(
+    logger: Logger, spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict
+) -> tuple[Path, Path]:
+    """Write the RPM SPEC file.
+
+    :param logger: output logger
+    :param spec_file: spec file path
+    :param sources_dir: sources rpmbuild directory
+    :param pypi_info: PyPI information data
+    :param pypi_urls: PyPI url data
+    :return: tuple[Path, Path].
+    """
+    environment = Environment(autoescape=False, loader=FileSystemLoader("pypi2rpm/templates/"))  # noqa: S701
+    template = environment.get_template("python-package.spec.j2")
+    source_url, source_file = get_source(sources_dir, pypi_info, pypi_urls)
+    cmd = "rpmdev-packager"
+    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
+    debug_pprint(logger, stdout)
+    if stderr:
+        logger.error(stderr)
+    if exit_code:
+        sys.exit("Cannot get RPM packager")
+    rpmdev_packager = stdout.rstrip()
     content = template.render(
         lc_name=pypi_info["name"].lower(),
         version=pypi_info["version"],
@@ -105,6 +133,8 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
         source_url=source_url,
         description=pypi_info["summary"],
         name=pypi_info["name"],
+        date=datetime.now(timezone.utc).strftime("%a %b %d %Y"),
+        rpmdev_packager=rpmdev_packager,
     )
     with spec_file.open(mode="w", encoding="utf-8") as spec:
         spec.write(content)

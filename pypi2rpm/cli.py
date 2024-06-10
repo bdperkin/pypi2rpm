@@ -25,8 +25,7 @@ from logging import _nameToLevel  # noqa: PLC2701
 
 from pypi2rpm.logger import debug_pprint, get_logger
 from pypi2rpm.pypi import get_pypi_json, write_spec
-from pypi2rpm.rpm import setup_rpmbuild
-from pypi2rpm.util import run_cmd
+from pypi2rpm.rpm import run_rpmbuild, setup_rpmbuild
 from pypi2rpm.version import version
 
 app_name = "pypi2rpm"
@@ -55,21 +54,14 @@ def main() -> int:
     logger.debug("'%s' starting", __name__)
     logger.info("Processing package '%s'", package_name)
     rpmbuild_dirs = setup_rpmbuild()
-    cmd = "pip freeze"
-    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
-    debug_pprint(logger, stdout)
-    if stderr:
-        logger.error(stderr)
-    if exit_code:
-        return exit_code
     pypi_info, pypi_urls = get_pypi_json(package_name)
     debug_pprint(logger, pypi_info)
     debug_pprint(logger, pypi_urls)
     logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
     spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
-    spec_file, source_file = write_spec(spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
+    spec_file, source_file = write_spec(logger, spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
     logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
-    return 0
+    return run_rpmbuild(logger, spec_file, rpmbuild_dirs["_topdir"])
 
 
 if __name__ == "__main__":

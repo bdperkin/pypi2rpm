@@ -62,6 +62,7 @@ pypi2rpm/version.py
 .Python
 .pytype/
 .ropeproject
+rpmbuild/
 *.sage.py
 .scrapy
 sdist/
