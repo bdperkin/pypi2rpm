@@ -60,7 +60,9 @@ def main() -> int:
         logger.error(stderr)
     if exit_code:
         return exit_code
-    debug_pprint(logger, get_pypi_json(package_name))
+    pypi_data = get_pypi_json(package_name)
+    debug_pprint(logger, pypi_data)
+    logger.info("Package name: '%s' Package version: '%s'", pypi_data["name"], pypi_data["version"])
     return 0
 
 
