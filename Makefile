@@ -10,7 +10,8 @@ help: ## Display help information
 
 clean: ## Clean environment
 	@echo "Cleaning environment"
-	$(RM) -r *~
+	$(RM) -r *~ build/ dist/ pypi2rpm.egg-info/
+	find . -type d -name "__pycache__" -exec $(RM) -r {} +
 
 clean-all: clean ## Clean environment including the virtual env and cache
 	@echo "Cleaning everything. You will need to recreate your venv!"
