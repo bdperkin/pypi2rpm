@@ -15,7 +15,7 @@ clean: ## Clean environment
 
 clean-all: clean ## Clean environment including the virtual env and cache
 	@echo "Cleaning everything. You will need to recreate your venv!"
-	$(RM) -r .cache/ pypi2rpm/version.py venv/
+	$(RM) -r .cache/ pypi2rpm/version.py rpmbuild/ venv/
 
 venv: clean ## Create isolated Python environment
 	@echo "Creating isolated $(PYTHON_BIN) environment"

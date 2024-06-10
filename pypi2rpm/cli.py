@@ -25,6 +25,7 @@ from logging import _nameToLevel  # noqa: PLC2701
 
 from pypi2rpm.logger import debug_pprint, get_logger
 from pypi2rpm.pypi import get_pypi_json, write_spec
+from pypi2rpm.rpm import setup_rpmbuild
 from pypi2rpm.util import run_cmd
 from pypi2rpm.version import version
 
@@ -53,6 +54,7 @@ def main() -> int:
     logger = get_logger(app_name, log_level)
     logger.debug("'%s' starting", __name__)
     logger.info("Processing package '%s'", package_name)
+    rpmbuild_dirs = setup_rpmbuild()
     cmd = "pip freeze"
     exit_code, stdout, stderr = run_cmd(logger, cmd, None)
     debug_pprint(logger, stdout)
@@ -64,8 +66,8 @@ def main() -> int:
     debug_pprint(logger, pypi_info)
     debug_pprint(logger, pypi_urls)
     logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
-    spec_file_name = f"python-{pypi_info['name'].lower()}.spec"
-    spec_file, source_file = write_spec(spec_file_name, pypi_info, pypi_urls)
+    spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
+    spec_file, source_file = write_spec(spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
     logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
     return 0
 

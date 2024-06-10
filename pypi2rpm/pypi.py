@@ -23,10 +23,13 @@ from __future__ import annotations
 
 import sys
 from hashlib import md5
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from jinja2 import Environment, FileSystemLoader
 from requests import get
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def get_pypi_json(package_name: str) -> tuple[dict, dict]:
@@ -59,10 +62,11 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     return pypi_info, pypi_urls
 
 
-def write_spec(spec_file_name: str, pypi_info: dict, pypi_urls: dict) -> tuple[Path, Path]:
+def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[Path, Path]:
     """Write the RPM SPEC file.
 
-    :param spec_file_name: spec file name
+    :param spec_file: spec file path
+    :param sources_dir: sources rpmbuild directory
     :param pypi_info: PyPI information data
     :param pypi_urls: PyPI url data
     :return: tuple[Path, Path].
@@ -77,7 +81,7 @@ def write_spec(spec_file_name: str, pypi_info: dict, pypi_urls: dict) -> tuple[P
             source_md5 = pypi_url["md5_digest"]
     if not source_url or not source_md5:
         sys.exit(f"Cannot find a source URL or MD5SUM for '{pypi_info['name']}'")
-    source_file = Path(source_url.split("/")[-1])
+    source_file = sources_dir / source_url.split("/")[-1]
     if source_file.exists():
         md5sum = md5(source_file.open("rb").read()).hexdigest()  # noqa: S324
         if md5sum != source_md5:
@@ -102,7 +106,6 @@ def write_spec(spec_file_name: str, pypi_info: dict, pypi_urls: dict) -> tuple[P
         description=pypi_info["summary"],
         name=pypi_info["name"],
     )
-    spec_file = Path(spec_file_name)
     with spec_file.open(mode="w", encoding="utf-8") as spec:
         spec.write(content)
     return spec_file, source_file
