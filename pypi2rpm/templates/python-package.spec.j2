@@ -26,7 +26,7 @@ Summary:        %{summary}
 
 
 %generate_buildrequires
-%pyproject_buildrequires -t
+%pyproject_buildrequires
 
 
 %build
@@ -35,13 +35,13 @@ Summary:        %{summary}
 
 %install
 %pyproject_install
-
-# Here, "{{ lc_name }}" is the name of the importable module.
-%pyproject_save_files -l {{ lc_name }}
+%pyproject_save_files '*' +auto
 
 
 %check
-%tox
+%if %{with tests}
+%pyproject_check_import
+%endif
 
 
 # Note that there is no %%files section for
@@ -51,8 +51,6 @@ Summary:        %{summary}
 # but executables and documentation must be listed in the spec file:
 
 %files -n python3-{{ lc_name }} -f %{pyproject_files}
-%doc README.md
-%{_bindir}/{{ lc_name }}_greeting
 
 
 %changelog
