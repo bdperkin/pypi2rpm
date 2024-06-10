@@ -22,6 +22,7 @@ with this program; if not, see
 from __future__ import annotations
 
 import sys
+import tarfile
 from datetime import datetime, timezone
 from hashlib import md5
 from typing import TYPE_CHECKING
@@ -67,7 +68,7 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     return pypi_info, pypi_urls
 
 
-def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str, Path]:
+def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str, Path, str]:
     """Get the source archive and file.
 
     :param sources_dir: sources rpmbuild directory
@@ -98,7 +99,9 @@ def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str
         if md5sum != source_md5:
             source_file.unlink()
             sys.exit(f"MD5SUM of file '{source_file}' does not match '{source_md5}'")
-    return source_url, source_file
+    tar = tarfile.open(source_file)
+    extract_dir = tar.getnames()[0].split("/")[0]
+    return source_url, source_file, extract_dir
 
 
 def write_spec(
@@ -115,7 +118,13 @@ def write_spec(
     """
     environment = Environment(autoescape=False, loader=FileSystemLoader("pypi2rpm/templates/"))  # noqa: S701
     template = environment.get_template("python-package.spec.j2")
-    source_url, source_file = get_source(sources_dir, pypi_info, pypi_urls)
+    source_url, source_file, extract_dir = get_source(sources_dir, pypi_info, pypi_urls)
+    license_name = "GPL-2.0-or-later"
+    if pypi_info["license"]:
+        license_name = pypi_info["license"]
+    home_page = pypi_info["home_page"]
+    if not home_page:
+        home_page = pypi_info["project_url"]
     cmd = "rpmdev-packager"
     exit_code, stdout, stderr = run_cmd(logger, cmd, None)
     debug_pprint(logger, stdout)
@@ -125,14 +134,14 @@ def write_spec(
         sys.exit("Cannot get RPM packager")
     rpmdev_packager = stdout.rstrip()
     content = template.render(
-        lc_name=pypi_info["name"].lower(),
+        name=pypi_info["name"].lower(),
         version=pypi_info["version"],
         summary=pypi_info["summary"],
-        license=pypi_info["license"],
-        home_page=pypi_info["home_page"],
+        license=license_name,
+        home_page=home_page,
         source_url=source_url,
         description=pypi_info["summary"],
-        name=pypi_info["name"],
+        extract_dir=extract_dir,
         date=datetime.now(timezone.utc).strftime("%a %b %d %Y"),
         rpmdev_packager=rpmdev_packager,
     )

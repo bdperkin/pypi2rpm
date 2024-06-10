@@ -1,4 +1,4 @@
-Name:           python-{{ lc_name }}
+Name:           python-{{ name }}
 Version:        {{ version }}
 Release:        1%{?dist}
 Summary:        {{ summary }}
@@ -15,14 +15,14 @@ BuildRequires:  python3-devel
 
 %description %_description
 
-%package -n python3-{{ lc_name }}
+%package -n python3-{{ name }}
 Summary:        %{summary}
 
-%description -n python3-{{ lc_name }} %_description
+%description -n python3-{{ name }} %_description
 
 
 %prep
-%autosetup -p1 -n {{ name }}-%{version}
+%autosetup -p1 -n {{ extract_dir }}
 
 
 %generate_buildrequires
@@ -45,12 +45,12 @@ Summary:        %{summary}
 
 
 # Note that there is no %%files section for
-# the unversioned python module, python-{{ lc_name }}.
+# the unversioned python module, python-{{ name }}.
 
-# For python3-{{ lc_name }}, %%{pyproject_files} handles code files and %%license,
+# For python3-{{ name }}, %%{pyproject_files} handles code files and %%license,
 # but executables and documentation must be listed in the spec file:
 
-%files -n python3-{{ lc_name }} -f %{pyproject_files}
+%files -n python3-{{ name }} -f %{pyproject_files}
 
 
 %changelog
