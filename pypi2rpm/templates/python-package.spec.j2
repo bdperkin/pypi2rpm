@@ -1,32 +1,28 @@
-Name:           python-pello
-Version:        1.0.4
+Name:           python-{{ lc_name }}
+Version:        {{ version }}
 Release:        1%{?dist}
-Summary:        Example Python library
+Summary:        {{ summary }}
 
-License:        MIT-0
-URL:            https://github.com/fedora-python/Pello
-Source:         %{url}/archive/v%{version}/Pello-%{version}.tar.gz
+License:        {{ license }}
+URL:            {{ home_page }}
+Source:         {{ source_url }}
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
 
 %global _description %{expand:
-A python module which provides a convenient example.
-This description provides some details.}
+{{ description }}}
 
 %description %_description
 
-%package -n python3-pello
+%package -n python3-{{ lc_name }}
 Summary:        %{summary}
-Recommends:     python3-pello+color
 
-%description -n python3-pello %_description
+%description -n python3-{{ lc_name }} %_description
 
-
-%pyproject_extras_subpkg -n python3-pello color
 
 %prep
-%autosetup -p1 -n Pello-%{version}
+%autosetup -p1 -n {{ name }}-%{version}
 
 
 %generate_buildrequires
@@ -40,8 +36,8 @@ Recommends:     python3-pello+color
 %install
 %pyproject_install
 
-# Here, "pello" is the name of the importable module.
-%pyproject_save_files -l pello
+# Here, "{{ lc_name }}" is the name of the importable module.
+%pyproject_save_files -l {{ lc_name }}
 
 
 %check
@@ -49,14 +45,14 @@ Recommends:     python3-pello+color
 
 
 # Note that there is no %%files section for
-# the unversioned python module, python-pello.
+# the unversioned python module, python-{{ lc_name }}.
 
-# For python3-pello, %%{pyproject_files} handles code files and %%license,
+# For python3-{{ lc_name }}, %%{pyproject_files} handles code files and %%license,
 # but executables and documentation must be listed in the spec file:
 
-%files -n python3-pello -f %{pyproject_files}
+%files -n python3-{{ lc_name }} -f %{pyproject_files}
 %doc README.md
-%{_bindir}/pello_greeting
+%{_bindir}/{{ lc_name }}_greeting
 
 
 %changelog

@@ -60,12 +60,13 @@ def main() -> int:
         logger.error(stderr)
     if exit_code:
         return exit_code
-    pypi_data = get_pypi_json(package_name)
-    debug_pprint(logger, pypi_data)
-    logger.info("Package name: '%s' Package version: '%s'", pypi_data["name"], pypi_data["version"])
-    spec_file_name = f"python-{pypi_data['name'].lower()}.spec"
-    spec_file = write_spec(spec_file_name, pypi_data)
-    logger.info("SPEC file written to '%s'", spec_file)
+    pypi_info, pypi_urls = get_pypi_json(package_name)
+    debug_pprint(logger, pypi_info)
+    debug_pprint(logger, pypi_urls)
+    logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
+    spec_file_name = f"python-{pypi_info['name'].lower()}.spec"
+    spec_file, source_file = write_spec(spec_file_name, pypi_info, pypi_urls)
+    logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
     return 0
 
 
