@@ -37,6 +37,7 @@ def main() -> int:
     :return: int.
     """
     parser = ArgumentParser()
+    parser.add_argument("--dist", help="'dist' string for rpms")
     parser.add_argument("-L", "--log-level", help="log level name", choices=list(_nameToLevel.keys()))
     parser.add_argument(
         "-V", "--version", help="show version string and exit", action="version", version=version
@@ -47,6 +48,9 @@ def main() -> int:
     )
     args = parser.parse_args()
     package_name = args.requirement_specifier
+    dist = ""
+    if args.dist:
+        dist = args.dist
     log_level = "WARNING"
     if args.log_level:
         log_level = args.log_level
@@ -61,7 +65,7 @@ def main() -> int:
     spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
     spec_file, source_file = write_spec(logger, spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
     logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
-    return run_rpmbuild(logger, spec_file, rpmbuild_dirs["_topdir"])
+    return run_rpmbuild(logger, spec_file, rpmbuild_dirs["_topdir"], dist)
 
 
 if __name__ == "__main__":

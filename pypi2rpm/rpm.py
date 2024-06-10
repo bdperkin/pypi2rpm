@@ -52,15 +52,19 @@ def setup_rpmbuild() -> dict[str, Path]:
     return rpmbuild_dirs
 
 
-def run_rpmbuild(logger: Logger, spec_file: Path, rpmbuild_dir: Path) -> int:
+def run_rpmbuild(logger: Logger, spec_file: Path, rpmbuild_dir: Path, dist: str) -> int:
     """Run the 'rpmbuild' command.
 
     :param logger: output logger
     :param spec_file: spec file path
     :param rpmbuild_dir: top-level rpmbuild directory
+    :param dist: dist string for rpms
     :return: int.
     """
-    cmd = f'rpmbuild --define "_topdir {rpmbuild_dir}/rpmbuild" -ba {spec_file}'
+    define_dist = ""
+    if dist:
+        define_dist = f'--define "dist {dist}"'
+    cmd = f'rpmbuild --define "_topdir {rpmbuild_dir}/rpmbuild" {define_dist} -ba {spec_file}'
     exit_code, stdout, stderr = run_cmd(logger, cmd, None)
     debug_pprint(logger, stdout)
     if stderr:
