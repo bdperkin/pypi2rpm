@@ -24,7 +24,7 @@ from argparse import ArgumentParser
 from logging import _nameToLevel  # noqa: PLC2701
 
 from pypi2rpm.logger import debug_pprint, get_logger
-from pypi2rpm.pypi import get_pypi_json
+from pypi2rpm.pypi import get_pypi_json, write_spec
 from pypi2rpm.util import run_cmd
 from pypi2rpm.version import version
 
@@ -63,6 +63,9 @@ def main() -> int:
     pypi_data = get_pypi_json(package_name)
     debug_pprint(logger, pypi_data)
     logger.info("Package name: '%s' Package version: '%s'", pypi_data["name"], pypi_data["version"])
+    spec_file_name = f"python-{pypi_data['name'].lower()}.spec"
+    spec_file = write_spec(spec_file_name, pypi_data)
+    logger.info("SPEC file written to '%s'", spec_file)
     return 0
 
 

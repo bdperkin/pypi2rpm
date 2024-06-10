@@ -20,7 +20,9 @@ with this program; if not, see
 """
 
 import sys
+from pathlib import Path
 
+from jinja2 import Environment, FileSystemLoader
 from requests import get
 
 
@@ -39,3 +41,19 @@ def get_pypi_json(package_name: str) -> dict:
     except KeyError as e:
         sys.exit(f"Cannot find {e}")
     return pypi_data
+
+
+def write_spec(spec_file_name: str, pypi_data: dict) -> Path:
+    """Write the RPM SPEC file.
+
+    :param spec_file_name: spec file name
+    :param pypi_data: PyPI data
+    :return: str.
+    """
+    environment = Environment(autoescape=True, loader=FileSystemLoader("pypi2rpm/templates/"))
+    template = environment.get_template("python-package.spec.j2")
+    content = template.render(pypi_data)
+    spec_file = Path(spec_file_name)
+    with spec_file.open(mode="w", encoding="utf-8") as message:
+        message.write(content)
+        return spec_file
