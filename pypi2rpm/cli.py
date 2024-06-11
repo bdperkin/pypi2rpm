@@ -26,9 +26,6 @@ from pathlib import Path
 
 from pypi2rpm import settings
 from pypi2rpm.logger import get_logger
-from pypi2rpm.pypi import get_pypi_json, write_spec
-from pypi2rpm.rpm import run_mock, run_rpmbuild, setup_rpmbuild
-from pypi2rpm.util import debug_pprint
 from pypi2rpm.version import version
 
 
@@ -61,6 +58,10 @@ def main() -> int:
         settings.log_level = args.log_level
     logger = get_logger(__name__)
     logger.debug("'%s' starting", __name__)
+    from pypi2rpm.pypi import get_pypi_json, write_spec  # noqa: PLC0415
+    from pypi2rpm.rpm import run_mock, run_rpmbuild, setup_rpmbuild  # noqa: PLC0415
+    from pypi2rpm.util import debug_pprint  # noqa: PLC0415
+
     logger.info("Processing package '%s'", package_name)
     mock_config = None
     if args.mock:
