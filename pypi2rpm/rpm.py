@@ -43,13 +43,11 @@ def setup_rpmbuild() -> dict[str, Path]:
         "_topdir": top_dir,
         "rpmbuild": rpmbuild_dir,
     }
-    if not rpmbuild_dir.exists():
-        rpmbuild_dir.mkdir()
-    for subdir in ["SOURCES", "SPECS"]:
+    rpmbuild_dir.mkdir(exist_ok=True)
+    for subdir in ["BUILD", "BUILDROOT", "RPMS", "SOURCES", "SPECS", "SRPMS"]:
         rpmbuild_subdir = rpmbuild_dir / subdir
         rpmbuild_dirs[subdir] = rpmbuild_subdir
-        if not rpmbuild_subdir.exists():
-            rpmbuild_subdir.mkdir()
+        rpmbuild_subdir.mkdir(exist_ok=True)
     return rpmbuild_dirs
 
 
@@ -105,6 +103,7 @@ def run_mock(spec_file: Path, rpmbuild_dir: Path, dist: str, mock_config: str) -
         cmd = f"rpm -qp --queryformat=%{{ARCH}} {bin_rpm}"
         _, bin_rpm_arch, _ = run_cmd(cmd, None)
         rpm_bin_dir = rpmbuild_dir / "rpmbuild" / "RPMS" / bin_rpm_arch
+        rpm_bin_dir.mkdir(exist_ok=True)
         move(str(bin_rpm), rpm_bin_dir / bin_rpm.name)
     for file in result_path.iterdir():
         if not str(file).endswith(".log"):
