@@ -21,6 +21,7 @@ with this program; if not, see
 
 from __future__ import annotations
 
+import platform
 import sys
 import tarfile
 from datetime import datetime, timezone
@@ -131,6 +132,11 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
     home_page = pypi_info["home_page"]
     if not home_page:
         home_page = pypi_info["project_url"]
+    arch = "noarch"
+    gcc = ""
+    if pypi_info["platform"]:
+        arch = platform.machine()
+        gcc = "BuildRequires:  gcc"
     cmd = "rpmdev-packager"
     exit_code, stdout, stderr = run_cmd(cmd, None)
     debug_pprint(stdout)
@@ -147,6 +153,8 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
         license=license_name,
         home_page=home_page,
         source_url=source_url,
+        arch=arch,
+        gcc=gcc,
         description=pypi_info["summary"],
         extract_dir=extract_dir,
         date=datetime.now(timezone.utc).strftime("%a %b %d %Y"),

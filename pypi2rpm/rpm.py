@@ -98,7 +98,7 @@ def run_mock(spec_file: Path, rpmbuild_dir: Path, dist: str, mock_config: str) -
     src_rpms = result_path.glob("python-*.src.rpm")
     for src_rpm in src_rpms:
         move(str(src_rpm), rpmbuild_dir / "rpmbuild" / "SRPMS" / src_rpm.name)
-    bin_rpms = result_path.glob("python3-*.rpm")
+    bin_rpms = result_path.glob("python*-*.rpm")
     for bin_rpm in bin_rpms:
         cmd = f"rpm -qp --queryformat=%{{ARCH}} {bin_rpm}"
         _, bin_rpm_arch, _ = run_cmd(cmd, None)
