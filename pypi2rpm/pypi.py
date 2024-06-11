@@ -40,10 +40,11 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def get_pypi_json(package_name: str) -> tuple[dict, dict]:
+def get_pypi_json(package_name: str, package_version: str) -> tuple[dict, dict]:
     """Get the JSON data for a package on PyPI.
 
     :param package_name: package name
+    :param package_version: package version
     :return: dict.
     """
     logger.info("Getting the JSON data for the '%s' package on PyPI", package_name)
@@ -56,8 +57,10 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     except KeyError as e:
         logger.critical("Cannot find '%s'", e)
         sys.exit(f"Cannot find {e}")
+    if not package_version:
+        package_version = pypi_info["version"]
     pypi_json = get(
-        f"{pypi_base_url}/{package_name}/{pypi_info['version']}/json",
+        f"{pypi_base_url}/{package_name}/{package_version}/json",
         headers={"Accept": "application/json"},
         timeout=10,
     )
@@ -74,18 +77,20 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     return pypi_info, pypi_urls
 
 
-def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str, Path, str]:
-    """Get the source archive file.
+def get_source_metadata(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[Path, str, str, bool]:
+    """Get the source archive metadata.
 
     :param sources_dir: sources rpmbuild directory
     :param pypi_info: PyPI information data
     :param pypi_urls: PyPI url data
-    :return: tuple[str, Path].
+    :return: tuple[Path, str, str, bool].
     """
-    logger.info("Getting the source archive file and storing in '%s'", sources_dir)
+    noarch = True
     source_url = None
     source_md5 = None
     for pypi_url in pypi_urls:
+        if pypi_url["python_version"].startswith("cp3"):
+            noarch = False
         if pypi_url["packagetype"] == "sdist" and pypi_url["python_version"] == "source":
             source_url = pypi_url["url"]
             source_md5 = pypi_url["md5_digest"]
@@ -93,6 +98,19 @@ def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str
         logger.critical("Cannot find a source URL or MD5SUM for '%s'", pypi_info["name"])
         sys.exit(f"Cannot find a source URL or MD5SUM for '{pypi_info['name']}'")
     source_file = sources_dir / source_url.split("/")[-1]
+    return source_file, source_md5, source_url, noarch
+
+
+def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str, Path, str, bool]:
+    """Get the source archive file.
+
+    :param sources_dir: sources rpmbuild directory
+    :param pypi_info: PyPI information data
+    :param pypi_urls: PyPI url data
+    :return: tuple[str, Path, str, bool].
+    """
+    logger.info("Getting the source archive file and storing in '%s'", sources_dir)
+    source_file, source_md5, source_url, noarch = get_source_metadata(sources_dir, pypi_info, pypi_urls)
     if source_file.exists():
         md5sum = md5(source_file.open("rb").read()).hexdigest()  # noqa: S324
         if md5sum != source_md5:
@@ -110,7 +128,7 @@ def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str
             sys.exit(f"MD5SUM of file '{source_file}' does not match '{source_md5}'")
     tar = tarfile.open(source_file)
     extract_dir = tar.getnames()[0].split("/")[0]
-    return source_url, source_file, extract_dir
+    return source_url, source_file, extract_dir, noarch
 
 
 def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[Path, Path]:
@@ -123,9 +141,11 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
     :return: tuple[Path, Path].
     """
     logger.info("Write the RPM SPEC file to '%s'", spec_file)
-    environment = Environment(autoescape=False, loader=FileSystemLoader(f"{settings.app_name}/templates/"))  # noqa: S701
-    template = environment.get_template("python-package.spec.j2")
-    source_url, source_file, extract_dir = get_source(sources_dir, pypi_info, pypi_urls)
+    template = Environment(
+        autoescape=False,  # noqa: S701
+        loader=FileSystemLoader(f"{settings.app_name}/templates/"),
+    ).get_template("python-package.spec.j2")
+    source_url, source_file, extract_dir, noarch = get_source(sources_dir, pypi_info, pypi_urls)
     license_name = "GPL-2.0-or-later"
     if pypi_info["license"]:
         license_name = pypi_info["license"]
@@ -134,7 +154,7 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
         home_page = pypi_info["project_url"]
     arch = "noarch"
     gcc = ""
-    if pypi_info["platform"]:
+    if pypi_info["platform"] or not noarch:
         arch = platform.machine()
         gcc = "BuildRequires:  gcc"
     cmd = "rpmdev-packager"

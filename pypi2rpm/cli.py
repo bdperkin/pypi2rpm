@@ -51,6 +51,13 @@ def main() -> int:
     )
     args = parser.parse_args()
     package_name = args.requirement_specifier
+    package_version = ""
+    try:
+        package_name, package_version = args.requirement_specifier.split("==", 1)
+    except IndexError:
+        pass
+    except ValueError:
+        pass
     dist = ""
     if args.dist:
         dist = args.dist
@@ -67,7 +74,7 @@ def main() -> int:
     if args.mock:
         mock_config = args.mock
     rpmbuild_dirs = setup_rpmbuild()
-    pypi_info, pypi_urls = get_pypi_json(package_name)
+    pypi_info, pypi_urls = get_pypi_json(package_name, package_version)
     debug_pprint(pypi_info)
     debug_pprint(pypi_urls)
     logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
