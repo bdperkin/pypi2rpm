@@ -23,18 +23,18 @@ from __future__ import annotations
 
 from os import environ, set_blocking
 from pathlib import Path
+from pprint import pformat
 from select import EPOLLHUP, EPOLLIN, epoll
 from subprocess import PIPE, Popen  # noqa: S404
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from logging import Logger
+from pypi2rpm.logger import get_logger
+
+logger = get_logger(__name__)
 
 
-def run_cmd(logger: Logger, command: str, env_variables: dict[str, str] | None) -> tuple[int, str, str]:
+def run_cmd(command: str, env_variables: dict[str, str] | None) -> tuple[int, str, str]:
     """Run command in a subprocess.
 
-    :param logger: output logger
     :param command: command to run
     :param env_variables: environmental variables
     :return: tuple[int, str, str].
@@ -90,3 +90,12 @@ def run_cmd(logger: Logger, command: str, env_variables: dict[str, str] | None) 
                 break
         exit_code = s_proc.returncode
     return exit_code, "".join(stdout), "".join(stderr)
+
+
+def debug_pprint(obj: object) -> None:
+    """Debug log the formatted representation of object.
+
+    :param obj: object to print
+    :return: None.
+    """
+    logger.debug("%s\n%s", type(obj), pformat(obj))

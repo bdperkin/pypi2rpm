@@ -30,11 +30,12 @@ from typing import TYPE_CHECKING
 from jinja2 import Environment, FileSystemLoader
 from requests import get
 
-from pypi2rpm.logger import debug_pprint
-from pypi2rpm.util import run_cmd
+from pypi2rpm import settings
+from pypi2rpm.logger import get_logger
+from pypi2rpm.util import debug_pprint, run_cmd
 
+logger = get_logger(__name__)
 if TYPE_CHECKING:
-    from logging import Logger
     from pathlib import Path
 
 
@@ -44,6 +45,7 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     :param package_name: package name
     :return: dict.
     """
+    logger.info("Getting the JSON data for the '%s' package on PyPI", package_name)
     pypi_base_url = "https://pypi.org/pypi"
     pypi_json = get(
         f"{pypi_base_url}/{package_name}/json", headers={"Accept": "application/json"}, timeout=10
@@ -51,6 +53,7 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     try:
         pypi_info = pypi_json.json()["info"]
     except KeyError as e:
+        logger.critical("Cannot find '%s'", e)
         sys.exit(f"Cannot find {e}")
     pypi_json = get(
         f"{pypi_base_url}/{package_name}/{pypi_info['version']}/json",
@@ -60,22 +63,25 @@ def get_pypi_json(package_name: str) -> tuple[dict, dict]:
     try:
         pypi_info = pypi_json.json()["info"]
     except KeyError as e:
+        logger.critical("Cannot find '%s'", e)
         sys.exit(f"Cannot find {e}")
     try:
         pypi_urls = pypi_json.json()["urls"]
     except KeyError as e:
+        logger.critical("Cannot find '%s'", e)
         sys.exit(f"Cannot find {e}")
     return pypi_info, pypi_urls
 
 
 def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str, Path, str]:
-    """Get the source archive and file.
+    """Get the source archive file.
 
     :param sources_dir: sources rpmbuild directory
     :param pypi_info: PyPI information data
     :param pypi_urls: PyPI url data
     :return: tuple[str, Path].
     """
+    logger.info("Getting the source archive file and storing in '%s'", sources_dir)
     source_url = None
     source_md5 = None
     for pypi_url in pypi_urls:
@@ -83,6 +89,7 @@ def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str
             source_url = pypi_url["url"]
             source_md5 = pypi_url["md5_digest"]
     if not source_url or not source_md5:
+        logger.critical("Cannot find a source URL or MD5SUM for '%s'", pypi_info["name"])
         sys.exit(f"Cannot find a source URL or MD5SUM for '{pypi_info['name']}'")
     source_file = sources_dir / source_url.split("/")[-1]
     if source_file.exists():
@@ -98,25 +105,24 @@ def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str
         md5sum = md5(source_file.open("rb").read()).hexdigest()  # noqa: S324
         if md5sum != source_md5:
             source_file.unlink()
+            logger.critical("MD5SUM of file '%s' does not match '%s'", source_file, source_md5)
             sys.exit(f"MD5SUM of file '{source_file}' does not match '{source_md5}'")
     tar = tarfile.open(source_file)
     extract_dir = tar.getnames()[0].split("/")[0]
     return source_url, source_file, extract_dir
 
 
-def write_spec(
-    logger: Logger, spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict
-) -> tuple[Path, Path]:
+def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[Path, Path]:
     """Write the RPM SPEC file.
 
-    :param logger: output logger
     :param spec_file: spec file path
     :param sources_dir: sources rpmbuild directory
     :param pypi_info: PyPI information data
     :param pypi_urls: PyPI url data
     :return: tuple[Path, Path].
     """
-    environment = Environment(autoescape=False, loader=FileSystemLoader("pypi2rpm/templates/"))  # noqa: S701
+    logger.info("Write the RPM SPEC file to '%s'", spec_file)
+    environment = Environment(autoescape=False, loader=FileSystemLoader(f"{settings.app_name}/templates/"))  # noqa: S701
     template = environment.get_template("python-package.spec.j2")
     source_url, source_file, extract_dir = get_source(sources_dir, pypi_info, pypi_urls)
     license_name = "GPL-2.0-or-later"
@@ -126,11 +132,12 @@ def write_spec(
     if not home_page:
         home_page = pypi_info["project_url"]
     cmd = "rpmdev-packager"
-    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
-    debug_pprint(logger, stdout)
+    exit_code, stdout, stderr = run_cmd(cmd, None)
+    debug_pprint(stdout)
     if stderr:
         logger.error(stderr)
     if exit_code:
+        logger.critical("Cannot get RPM packager")
         sys.exit("Cannot get RPM packager")
     rpmdev_packager = stdout.rstrip()
     content = template.render(

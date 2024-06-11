@@ -24,13 +24,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from shutil import move
-from typing import TYPE_CHECKING
 
-from pypi2rpm.logger import debug_pprint
-from pypi2rpm.util import run_cmd
+from pypi2rpm.logger import get_logger
+from pypi2rpm.util import debug_pprint, run_cmd
 
-if TYPE_CHECKING:
-    from logging import Logger
+logger = get_logger(__name__)
 
 
 def setup_rpmbuild() -> dict[str, Path]:
@@ -38,6 +36,7 @@ def setup_rpmbuild() -> dict[str, Path]:
 
     :return: dict[str, Path].
     """
+    logger.info("Setting up the 'rpmbuild' directories")
     top_dir = Path().cwd()
     rpmbuild_dir = top_dir / "rpmbuild"
     rpmbuild_dirs = {
@@ -54,36 +53,38 @@ def setup_rpmbuild() -> dict[str, Path]:
     return rpmbuild_dirs
 
 
-def run_rpmbuild(logger: Logger, spec_file: Path, rpmbuild_dir: Path, dist: str) -> int:
+def run_rpmbuild(spec_file: Path, rpmbuild_dir: Path, dist: str) -> int:
     """Run the 'rpmbuild' command.
 
-    :param logger: output logger
     :param spec_file: spec file path
     :param rpmbuild_dir: top-level rpmbuild directory
     :param dist: dist string for rpms
     :return: int.
     """
+    logger.info("Running the 'rpmbuild' command on '%s' with dist '%s'", spec_file, dist)
     define_dist = ""
     if dist:
         define_dist = f'--define "dist {dist}"'
     cmd = f'rpmbuild --define "_topdir {rpmbuild_dir}/rpmbuild" {define_dist} -ba {spec_file}'
-    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
-    debug_pprint(logger, stdout)
+    exit_code, stdout, stderr = run_cmd(cmd, None)
+    debug_pprint(stdout)
     if exit_code:
         logger.error(stderr)
     return exit_code
 
 
-def run_mock(logger: Logger, spec_file: Path, rpmbuild_dir: Path, dist: str, mock_config: str) -> int:
+def run_mock(spec_file: Path, rpmbuild_dir: Path, dist: str, mock_config: str) -> int:
     """Run the 'mock' command.
 
-    :param logger: output logger
     :param spec_file: spec file path
     :param rpmbuild_dir: top-level rpmbuild directory
     :param dist: dist string for rpms
     :param mock_config: mock configuration
     :return: int.
     """
+    logger.info(
+        "Running the 'mock' command on '%s' with dist '%s' and '%s' mock config", spec_file, dist, mock_config
+    )
     define_dist = ""
     if dist:
         define_dist = f'--define "dist {dist}"'
@@ -91,8 +92,8 @@ def run_mock(logger: Logger, spec_file: Path, rpmbuild_dir: Path, dist: str, moc
         f"mock {define_dist} --root {mock_config} "
         f"--sources {rpmbuild_dir}/rpmbuild/SOURCES --spec {spec_file}"
     )
-    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
-    debug_pprint(logger, stdout)
+    exit_code, stdout, stderr = run_cmd(cmd, None)
+    debug_pprint(stdout)
     if exit_code:
         logger.error(stderr)
     result_path = Path("/var/lib/mock") / mock_config / "result"
@@ -102,10 +103,11 @@ def run_mock(logger: Logger, spec_file: Path, rpmbuild_dir: Path, dist: str, moc
     bin_rpms = result_path.glob("python3-*.rpm")
     for bin_rpm in bin_rpms:
         cmd = f"rpm -qp --queryformat=%{{ARCH}} {bin_rpm}"
-        _, bin_rpm_arch, _ = run_cmd(logger, cmd, None)
+        _, bin_rpm_arch, _ = run_cmd(cmd, None)
         rpm_bin_dir = rpmbuild_dir / "rpmbuild" / "RPMS" / bin_rpm_arch
         move(str(bin_rpm), rpm_bin_dir / bin_rpm.name)
     for file in result_path.iterdir():
         if not str(file).endswith(".log"):
+            logger.critical("Found additional files in '%s'", result_path)
             sys.exit(f"Found additional files in '{result_path}'")
     return exit_code

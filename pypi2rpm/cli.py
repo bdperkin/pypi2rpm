@@ -24,12 +24,12 @@ from argparse import ArgumentParser
 from logging import _nameToLevel  # noqa: PLC2701
 from pathlib import Path
 
-from pypi2rpm.logger import debug_pprint, get_logger
+from pypi2rpm import settings
+from pypi2rpm.logger import get_logger
 from pypi2rpm.pypi import get_pypi_json, write_spec
 from pypi2rpm.rpm import run_mock, run_rpmbuild, setup_rpmbuild
+from pypi2rpm.util import debug_pprint
 from pypi2rpm.version import version
-
-app_name = "pypi2rpm"
 
 
 def main() -> int:
@@ -57,10 +57,9 @@ def main() -> int:
     dist = ""
     if args.dist:
         dist = args.dist
-    log_level = "WARNING"
     if args.log_level:
-        log_level = args.log_level
-    logger = get_logger(app_name, log_level)
+        settings.log_level = args.log_level
+    logger = get_logger(__name__)
     logger.debug("'%s' starting", __name__)
     logger.info("Processing package '%s'", package_name)
     mock_config = None
@@ -68,15 +67,15 @@ def main() -> int:
         mock_config = args.mock
     rpmbuild_dirs = setup_rpmbuild()
     pypi_info, pypi_urls = get_pypi_json(package_name)
-    debug_pprint(logger, pypi_info)
-    debug_pprint(logger, pypi_urls)
+    debug_pprint(pypi_info)
+    debug_pprint(pypi_urls)
     logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
     spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
-    spec_file, source_file = write_spec(logger, spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
+    spec_file, source_file = write_spec(spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
     logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
     if mock_config:
-        return run_mock(logger, spec_file, rpmbuild_dirs["_topdir"], dist, mock_config)
-    return run_rpmbuild(logger, spec_file, rpmbuild_dirs["_topdir"], dist)
+        return run_mock(spec_file, rpmbuild_dirs["_topdir"], dist, mock_config)
+    return run_rpmbuild(spec_file, rpmbuild_dirs["_topdir"], dist)
 
 
 if __name__ == "__main__":
