@@ -70,3 +70,23 @@ def run_rpmbuild(logger: Logger, spec_file: Path, rpmbuild_dir: Path, dist: str)
     if stderr:
         logger.error(stderr)
     return exit_code
+
+
+def run_mock(logger: Logger, spec_file: Path, rpmbuild_dir: Path, dist: str) -> int:
+    """Run the 'mock' command.
+
+    :param logger: output logger
+    :param spec_file: spec file path
+    :param rpmbuild_dir: top-level rpmbuild directory
+    :param dist: dist string for rpms
+    :return: int.
+    """
+    define_dist = ""
+    if dist:
+        define_dist = f'--define "dist {dist}"'
+    cmd = f"mock {define_dist} --sources {rpmbuild_dir}/rpmbuild/SOURCES --spec {spec_file}"
+    exit_code, stdout, stderr = run_cmd(logger, cmd, None)
+    debug_pprint(logger, stdout)
+    if stderr:
+        logger.error(stderr)
+    return exit_code

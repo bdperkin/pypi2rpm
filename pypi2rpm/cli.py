@@ -22,10 +22,11 @@ with this program; if not, see
 import sys
 from argparse import ArgumentParser
 from logging import _nameToLevel  # noqa: PLC2701
+from pathlib import Path
 
 from pypi2rpm.logger import debug_pprint, get_logger
 from pypi2rpm.pypi import get_pypi_json, write_spec
-from pypi2rpm.rpm import run_rpmbuild, setup_rpmbuild
+from pypi2rpm.rpm import run_mock, run_rpmbuild, setup_rpmbuild
 from pypi2rpm.version import version
 
 app_name = "pypi2rpm"
@@ -36,9 +37,14 @@ def main() -> int:
 
     :return: int.
     """
+    mock_cfgs = []
+    mock_path = Path("/etc/mock")
+    if mock_path.exists() and mock_path.is_dir():
+        mock_cfgs = [x.stem for x in mock_path.glob("*-x86_64.cfg")]
     parser = ArgumentParser()
     parser.add_argument("--dist", help="'dist' string for rpms")
     parser.add_argument("-L", "--log-level", help="log level name", choices=list(_nameToLevel.keys()))
+    parser.add_argument("-M", "--mock", help="use 'mock' instead of 'rpmbuild'", choices=sorted(mock_cfgs))
     parser.add_argument(
         "-V", "--version", help="show version string and exit", action="version", version=version
     )
@@ -57,6 +63,9 @@ def main() -> int:
     logger = get_logger(app_name, log_level)
     logger.debug("'%s' starting", __name__)
     logger.info("Processing package '%s'", package_name)
+    mock_config = None
+    if args.mock:
+        mock_config = args.mock
     rpmbuild_dirs = setup_rpmbuild()
     pypi_info, pypi_urls = get_pypi_json(package_name)
     debug_pprint(logger, pypi_info)
@@ -65,6 +74,8 @@ def main() -> int:
     spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
     spec_file, source_file = write_spec(logger, spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
     logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
+    if mock_config:
+        return run_mock(logger, spec_file, rpmbuild_dirs["_topdir"], dist)
     return run_rpmbuild(logger, spec_file, rpmbuild_dirs["_topdir"], dist)
 
 
