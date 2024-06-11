@@ -11,6 +11,8 @@ BuildArch:      {{ arch }}
 BuildRequires:  python3-devel
 {{ gcc }}
 
+%define debug_package %{nil}
+
 %global _description %{expand:
 {{ description }}}
 
