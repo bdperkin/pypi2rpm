@@ -75,7 +75,7 @@ def main() -> int:
     spec_file, source_file = write_spec(logger, spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
     logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
     if mock_config:
-        return run_mock(logger, spec_file, rpmbuild_dirs["_topdir"], dist)
+        return run_mock(logger, spec_file, rpmbuild_dirs["_topdir"], dist, mock_config)
     return run_rpmbuild(logger, spec_file, rpmbuild_dirs["_topdir"], dist)
 
 
