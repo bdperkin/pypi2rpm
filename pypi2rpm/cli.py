@@ -20,9 +20,11 @@ with this program; if not, see
 """
 
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
 from logging import _nameToLevel  # noqa: PLC2701
 from pathlib import Path
+
+import tomllib
 
 from pypi2rpm import settings
 from pypi2rpm.logger import get_logger
@@ -39,7 +41,10 @@ def main() -> int:
     if mock_path.exists() and mock_path.is_dir():
         mock_cfgs = [x.stem for x in mock_path.glob("*-x86_64.cfg")]
     parser = ArgumentParser()
-    parser.add_argument("--dist", help="'dist' string for rpms")
+    parser.add_argument(
+        "-B", "--build-requires", help="optional toml file with rpm build requirements", type=FileType("rb")
+    )
+    parser.add_argument("-D", "--dist", help="'dist' string for rpms")
     parser.add_argument("-L", "--log-level", help="log level name", choices=list(_nameToLevel.keys()))
     parser.add_argument("-M", "--mock", help="use 'mock' instead of 'rpmbuild'", choices=sorted(mock_cfgs))
     parser.add_argument(
@@ -58,6 +63,11 @@ def main() -> int:
         pass
     except ValueError:
         pass
+    build_requires: dict = {
+        "build-requires": {},
+    }
+    if args.build_requires:
+        build_requires = tomllib.load(args.build_requires)
     dist = ""
     if args.dist:
         dist = args.dist
@@ -79,7 +89,9 @@ def main() -> int:
     debug_pprint(pypi_urls)
     logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
     spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
-    spec_file, source_file = write_spec(spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls)
+    spec_file, source_file = write_spec(
+        spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls, build_requires
+    )
     logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
     if mock_config:
         return run_mock(spec_file, rpmbuild_dirs["_topdir"], dist, mock_config)

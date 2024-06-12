@@ -9,7 +9,9 @@ Source:         {{ source_url }}
 
 BuildArch:      {{ arch }}
 BuildRequires:  python3-devel
-{{ arch_build_requires }}
+{% for build_requires in build_requires_list %}
+BuildRequires:  {{ build_requires }}
+{% endfor %}
 
 %define debug_package %{nil}
 

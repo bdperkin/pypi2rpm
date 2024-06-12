@@ -138,13 +138,16 @@ def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str
     return source_url, source_file, extract_dir, noarch
 
 
-def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[Path, Path]:
+def write_spec(
+    spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: dict, build_requires: dict
+) -> tuple[Path, Path]:
     """Write the RPM SPEC file.
 
     :param spec_file: spec file path
     :param sources_dir: sources rpmbuild directory
     :param pypi_info: PyPI information data
     :param pypi_urls: PyPI url data
+    :param build_requires: additional package BuildRequires data
     :return: tuple[Path, Path].
     """
     logger.info("Write the RPM SPEC file to '%s'", spec_file)
@@ -160,10 +163,11 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
     if not home_page:
         home_page = pypi_info["project_url"]
     arch = "noarch"
-    arch_build_requires = ""
     if pypi_info["platform"] or not noarch:
         arch = platform.machine()
-        arch_build_requires = "BuildRequires:  gcc\n" "BuildRequires:  cargo\n"
+    build_requires_list = []
+    if pypi_info["name"] in build_requires["build-requires"]:
+        build_requires_list = build_requires["build-requires"][pypi_info["name"]]
     cmd = "rpmdev-packager"
     exit_code, stdout, stderr = run_cmd(cmd, None)
     debug_pprint(stdout)
@@ -181,7 +185,7 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
         home_page=home_page,
         source_url=source_url,
         arch=arch,
-        arch_build_requires=arch_build_requires,
+        build_requires_list=build_requires_list,
         description=pypi_info["summary"],
         extract_dir=extract_dir,
         date=datetime.now(timezone.utc).strftime("%a %b %d %Y"),
