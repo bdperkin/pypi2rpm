@@ -163,7 +163,7 @@ def write_spec(
     if not home_page:
         home_page = pypi_info["project_url"]
     arch = "noarch"
-    if pypi_info["platform"] or not noarch:
+    if pypi_info["platform"] or pypi_info["name"] in build_requires["build-requires"] or not noarch:
         arch = platform.machine()
     build_requires_list = []
     if pypi_info["name"] in build_requires["build-requires"]:
