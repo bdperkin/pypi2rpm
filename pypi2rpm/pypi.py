@@ -89,7 +89,9 @@ def get_source_metadata(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> 
     source_url = None
     source_md5 = None
     for pypi_url in pypi_urls:
-        if pypi_url["python_version"].startswith("cp3"):
+        if pypi_url["python_version"].startswith("cp3") or pypi_url["filename"].endswith(
+            f"_{platform.machine()}.whl"
+        ):
             noarch = False
         if pypi_url["packagetype"] == "sdist" and pypi_url["python_version"] == "source":
             source_url = pypi_url["url"]
@@ -153,10 +155,10 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
     if not home_page:
         home_page = pypi_info["project_url"]
     arch = "noarch"
-    gcc = ""
+    arch_build_requires = ""
     if pypi_info["platform"] or not noarch:
         arch = platform.machine()
-        gcc = "BuildRequires:  gcc"
+        arch_build_requires = "BuildRequires:  gcc\n" "BuildRequires:  cargo\n"
     cmd = "rpmdev-packager"
     exit_code, stdout, stderr = run_cmd(cmd, None)
     debug_pprint(stdout)
@@ -174,7 +176,7 @@ def write_spec(spec_file: Path, sources_dir: Path, pypi_info: dict, pypi_urls: d
         home_page=home_page,
         source_url=source_url,
         arch=arch,
-        gcc=gcc,
+        arch_build_requires=arch_build_requires,
         description=pypi_info["summary"],
         extract_dir=extract_dir,
         date=datetime.now(timezone.utc).strftime("%a %b %d %Y"),

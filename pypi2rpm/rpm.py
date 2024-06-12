@@ -87,7 +87,7 @@ def run_mock(spec_file: Path, rpmbuild_dir: Path, dist: str, mock_config: str) -
     if dist:
         define_dist = f'--define "dist {dist}"'
     cmd = (
-        f"mock {define_dist} --root {mock_config} "
+        f"mock {define_dist} --enable-network --root {mock_config} "
         f"--sources {rpmbuild_dir}/rpmbuild/SOURCES --spec {spec_file}"
     )
     exit_code, stdout, stderr = run_cmd(cmd, None)
