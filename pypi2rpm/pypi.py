@@ -24,6 +24,7 @@ from __future__ import annotations
 import platform
 import sys
 import tarfile
+import zipfile
 from datetime import datetime, timezone
 from hashlib import md5
 from typing import TYPE_CHECKING
@@ -128,8 +129,12 @@ def get_source(sources_dir: Path, pypi_info: dict, pypi_urls: dict) -> tuple[str
             source_file.unlink()
             logger.critical("MD5SUM of file '%s' does not match '%s'", source_file, source_md5)
             sys.exit(f"MD5SUM of file '{source_file}' does not match '{source_md5}'")
-    tar = tarfile.open(source_file)
-    extract_dir = tar.getnames()[0].split("/")[0]
+    try:
+        tar_file = tarfile.open(source_file)
+        extract_dir = tar_file.getnames()[0].split("/")[0]
+    except tarfile.ReadError:
+        zip_file = zipfile.ZipFile(source_file)
+        extract_dir = zip_file.namelist()[0].split("/")[0]
     return source_url, source_file, extract_dir, noarch
 
 
