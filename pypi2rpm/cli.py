@@ -19,6 +19,7 @@ with this program; if not, see
 <http://www.gnu.org/licenses/>.
 """
 
+import platform
 import sys
 from argparse import ArgumentParser, FileType
 from logging import _nameToLevel  # noqa: PLC2701
@@ -39,7 +40,7 @@ def main() -> int:
     mock_cfgs = []
     mock_path = Path("/etc/mock")
     if mock_path.exists() and mock_path.is_dir():
-        mock_cfgs = [x.stem for x in mock_path.glob("*-x86_64.cfg")]
+        mock_cfgs = [x.stem for x in mock_path.glob(f"*-{platform.machine()}.cfg")]
     parser = ArgumentParser()
     parser.add_argument(
         "-B", "--build-requires", help="optional toml file with rpm build requirements", type=FileType("rb")
