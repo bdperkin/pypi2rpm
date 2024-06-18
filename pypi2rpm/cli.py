@@ -54,49 +54,52 @@ def main() -> int:
     parser.add_argument(
         "requirement_specifier",
         help="PyPI (and other indexes) requirement specifier",
+        nargs="+",
     )
     args = parser.parse_args()
-    package_name = args.requirement_specifier
-    package_version = ""
-    try:
-        package_name, package_version = args.requirement_specifier.split("==", 1)
-    except IndexError:
-        pass
-    except ValueError:
-        pass
-    build_requires: dict = {
-        "build-requires": {},
-    }
-    if args.build_requires:
-        build_requires = tomllib.load(args.build_requires)
-    dist = ""
-    if args.dist:
-        dist = args.dist
-    if args.log_level:
-        settings.log_level = args.log_level
-    logger = get_logger(__name__)
-    logger.debug("'%s' starting", __name__)
-    from pypi2rpm.pypi import get_pypi_json, write_spec  # noqa: PLC0415
-    from pypi2rpm.rpm import run_mock, run_rpmbuild, setup_rpmbuild  # noqa: PLC0415
-    from pypi2rpm.util import debug_pprint  # noqa: PLC0415
+    for package_string in args.requirement_specifier:
+        package_name = package_string
+        package_version = ""
+        try:
+            package_name, package_version = package_string.split("==", 1)
+        except IndexError:
+            pass
+        except ValueError:
+            pass
+        build_requires: dict = {
+            "build-requires": {},
+        }
+        if args.build_requires:
+            build_requires = tomllib.load(args.build_requires)
+        dist = ""
+        if args.dist:
+            dist = args.dist
+        if args.log_level:
+            settings.log_level = args.log_level
+        logger = get_logger(__name__)
+        logger.debug("'%s' starting", __name__)
+        from pypi2rpm.pypi import get_pypi_json, write_spec  # noqa: PLC0415
+        from pypi2rpm.rpm import run_mock, run_rpmbuild, setup_rpmbuild  # noqa: PLC0415
+        from pypi2rpm.util import debug_pprint  # noqa: PLC0415
 
-    logger.info("Processing package '%s'", package_name)
-    mock_config = None
-    if args.mock:
-        mock_config = args.mock
-    rpmbuild_dirs = setup_rpmbuild()
-    pypi_info, pypi_urls = get_pypi_json(package_name, package_version)
-    debug_pprint(pypi_info)
-    debug_pprint(pypi_urls)
-    logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
-    spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
-    spec_file, source_file = write_spec(
-        spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls, build_requires
-    )
-    logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
-    if mock_config:
-        return run_mock(spec_file, rpmbuild_dirs["_topdir"], dist, mock_config)
-    return run_rpmbuild(spec_file, rpmbuild_dirs["_topdir"], dist)
+        logger.info("Processing package '%s'", package_name)
+        mock_config = None
+        if args.mock:
+            mock_config = args.mock
+        rpmbuild_dirs = setup_rpmbuild()
+        pypi_info, pypi_urls = get_pypi_json(package_name, package_version)
+        debug_pprint(pypi_info)
+        debug_pprint(pypi_urls)
+        logger.info("Package name: '%s' Package version: '%s'", pypi_info["name"], pypi_info["version"])
+        spec_file = rpmbuild_dirs["SPECS"] / f"python-{pypi_info['name'].lower()}.spec"
+        spec_file, source_file = write_spec(
+            spec_file, rpmbuild_dirs["SOURCES"], pypi_info, pypi_urls, build_requires
+        )
+        logger.info("SPEC file written to '%s' Source file written to '%s'", spec_file, source_file)
+        if mock_config:
+            return run_mock(spec_file, rpmbuild_dirs["_topdir"], dist, mock_config)
+        return run_rpmbuild(spec_file, rpmbuild_dirs["_topdir"], dist)
+    return 0
 
 
 if __name__ == "__main__":

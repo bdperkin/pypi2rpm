@@ -35,9 +35,11 @@ Summary:        %{summary}
 
 
 %build
+# %pyproject_wheel
 %_set_pytest_addopts
 mkdir -p "%{_pyproject_builddir}"
-%{__python3} -m pip download --dest %{_pyproject_wheeldir} --no-deps --disable-pip-version-check --progress-bar off --verbose --no-cache-dir "{{ name }}=={{ version }}"
+%{__python3} -m pip download --dest %{_pyproject_wheeldir} --no-deps --disable-pip-version-check --progress-bar off \
+--verbose --no-cache-dir "{{ name }}=={{ version }}"
 
 
 %install
