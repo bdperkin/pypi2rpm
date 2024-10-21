@@ -16,14 +16,14 @@ repos:
         stages:
           - manual
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
         name: check for added large files
         description: prevents giant files from being committed.
         entry: check-added-large-files
         language: python
-        stages: [commit, push, manual]
+        stages: [pre-commit, pre-push, manual]
       - id: check-ast
         name: check python ast
         description: simply checks whether the files parse as valid python.
@@ -49,7 +49,7 @@ repos:
         entry: check-shebang-scripts-are-executable
         language: python
         types: [text]
-        stages: [commit, push, manual]
+        stages: [pre-commit, pre-push, manual]
         exclude_types:
           - jinja
       - id: check-merge-conflict
@@ -102,7 +102,7 @@ repos:
         entry: end-of-file-fixer
         language: python
         types: [text]
-        stages: [commit, push, manual]
+        stages: [pre-commit, pre-push, manual]
         exclude_types:
           - jinja
           - markdown
@@ -132,7 +132,7 @@ repos:
         entry: trailing-whitespace-fixer
         language: python
         types: [text]
-        stages: [commit, push, manual]
+        stages: [pre-commit, pre-push, manual]
         exclude_types:
           - svg
   - repo: https://github.com/pre-commit/pygrep-hooks
@@ -225,7 +225,7 @@ repos:
         types: [text]
         exclude: ^\.pre-commit-config.yaml$
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.18
+    rev: v0.21
     hooks:
       - id: validate-pyproject
         name: Validate pyproject.toml
@@ -246,8 +246,8 @@ repos:
         entry: yamllint
         language: python
         types: [file, yaml]
-  - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v2.0.4
+  - repo: https://github.com/hhatto/autopep8
+    rev: v2.3.1
     hooks:
       - id: autopep8
         name: autopep8
@@ -260,7 +260,7 @@ repos:
         additional_dependencies: []
         minimum_pre_commit_version: '0'
   - repo: https://github.com/PyCQA/doc8
-    rev: v1.1.1
+    rev: v1.1.2
     hooks:
       - id: doc8
         name: doc8
@@ -280,7 +280,7 @@ repos:
         language: python
         types: [python]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.8
+    rev: v0.7.0
     hooks:
       - id: ruff
         name: ruff
@@ -303,7 +303,7 @@ repos:
         additional_dependencies: []
         minimum_pre_commit_version: 2.9.2
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.12.1
     hooks:
       - id: mypy
         name: mypy
